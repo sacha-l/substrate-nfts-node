@@ -6,9 +6,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use pallet_grandpa::AuthorityId as GrandpaId;
 use sp_api::impl_runtime_apis;
-use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
@@ -27,7 +25,8 @@ use sp_version::RuntimeVersion;
 pub use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{
-		AsEnsureOriginWithArg, ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness, StorageInfo,
+		AsEnsureOriginWithArg, ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem,
+		Randomness, StorageInfo,
 	},
 	weights::{
 		constants::{
@@ -38,9 +37,7 @@ pub use frame_support::{
 	StorageValue,
 };
 
-use frame_system::{
-	EnsureRoot, EnsureSigned,
-};
+use frame_system::{EnsureRoot, EnsureSigned};
 
 pub use frame_system::Call as SystemCall;
 pub use pallet_balances::Call as BalancesCall;
@@ -88,12 +85,15 @@ pub mod opaque {
 	pub type BlockId = generic::BlockId<Block>;
 
 	impl_opaque_keys! {
-		pub struct SessionKeys {
-			pub aura: Aura,
-			pub grandpa: Grandpa,
-		}
+		pub struct SessionKeys {}
 	}
 }
+
+/// Change this to adjust the block time.
+pub const MILLISECS_PER_BLOCK: u64 = 6000;
+pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
+pub const HOURS: BlockNumber = MINUTES * 60;
+pub const DAYS: BlockNumber = HOURS * 24;
 
 // To learn more about runtime versioning, see:
 // https://docs.substrate.io/main-docs/build/upgrade#runtime-versioning
@@ -113,23 +113,6 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	transaction_version: 1,
 	state_version: 1,
 };
-
-/// This determines the average expected block time that we are targeting.
-/// Blocks will be produced at a minimum duration defined by `SLOT_DURATION`.
-/// `SLOT_DURATION` is picked up by `pallet_timestamp` which is in turn picked
-/// up by `pallet_aura` to implement `fn slot_duration()`.
-///
-/// Change this to adjust the block time.
-pub const MILLISECS_PER_BLOCK: u64 = 6000;
-
-// NOTE: Currently it is not possible to change the slot duration after the chain has started.
-//       Attempting to do so will brick block production.
-pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
-
-// Time is measured by number of blocks.
-pub const MINUTES: BlockNumber = 60_000 / (MILLISECS_PER_BLOCK as BlockNumber);
-pub const HOURS: BlockNumber = MINUTES * 60;
-pub const DAYS: BlockNumber = HOURS * 24;
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -207,28 +190,16 @@ impl frame_system::Config for Runtime {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_aura::Config for Runtime {
-	type AuthorityId = AuraId;
-	type DisabledValidators = ();
-	type MaxAuthorities = ConstU32<32>;
-}
-
-impl pallet_grandpa::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-
-	type WeightInfo = ();
-	type MaxAuthorities = ConstU32<32>;
-	type MaxSetIdSessionEntries = ConstU64<0>;
-
-	type KeyOwnerProof = sp_core::Void;
-	type EquivocationReportSystem = ();
+impl pallet_authorship::Config for Runtime {
+	type FindAuthor = ();
+	type EventHandler = ();
 }
 
 impl pallet_timestamp::Config for Runtime {
 	/// A timestamp: milliseconds since the unix epoch.
 	type Moment = u64;
-	type OnTimestampSet = Aura;
-	type MinimumPeriod = ConstU64<{ SLOT_DURATION / 2 }>;
+	type OnTimestampSet = ();
+	type MinimumPeriod = frame_support::traits::ConstU64<5>;
 	type WeightInfo = ();
 }
 
@@ -271,7 +242,7 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
-// Money matters for calculating collection deposits
+// Money matters (for calculating collection deposits)
 pub const UNITS: Balance = 1_000_000_000_000;
 pub const QUID: Balance = UNITS / 30;
 pub const CENTS: Balance = QUID / 100;
@@ -333,8 +304,6 @@ construct_runtime!(
 	{
 		System: frame_system,
 		Timestamp: pallet_timestamp,
-		Aura: pallet_aura,
-		Grandpa: pallet_grandpa,
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
@@ -455,16 +424,6 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
-		fn slot_duration() -> sp_consensus_aura::SlotDuration {
-			sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
-		}
-
-		fn authorities() -> Vec<AuraId> {
-			Aura::authorities().into_inner()
-		}
-	}
-
 	impl sp_session::SessionKeys<Block> for Runtime {
 		fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
 			opaque::SessionKeys::generate(seed)
@@ -474,36 +433,6 @@ impl_runtime_apis! {
 			encoded: Vec<u8>,
 		) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
 			opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
-		}
-	}
-
-	impl sp_consensus_grandpa::GrandpaApi<Block> for Runtime {
-		fn grandpa_authorities() -> sp_consensus_grandpa::AuthorityList {
-			Grandpa::grandpa_authorities()
-		}
-
-		fn current_set_id() -> sp_consensus_grandpa::SetId {
-			Grandpa::current_set_id()
-		}
-
-		fn submit_report_equivocation_unsigned_extrinsic(
-			_equivocation_proof: sp_consensus_grandpa::EquivocationProof<
-				<Block as BlockT>::Hash,
-				NumberFor<Block>,
-			>,
-			_key_owner_proof: sp_consensus_grandpa::OpaqueKeyOwnershipProof,
-		) -> Option<()> {
-			None
-		}
-
-		fn generate_key_ownership_proof(
-			_set_id: sp_consensus_grandpa::SetId,
-			_authority_id: GrandpaId,
-		) -> Option<sp_consensus_grandpa::OpaqueKeyOwnershipProof> {
-			// NOTE: this is the only implementation possible since we've
-			// defined our key owner proof type as a bottom type (i.e. a type
-			// with no values).
-			None
 		}
 	}
 

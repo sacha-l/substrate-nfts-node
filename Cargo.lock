@@ -374,6 +374,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "155a5a185e42c6b77ac7b88a15143d930a9e9727a5b7b77eed417404ab15c247"
 
 [[package]]
+name = "assert_matches"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
+
+[[package]]
 name = "async-channel"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4384,8 +4390,7 @@ dependencies = [
  "sc-cli",
  "sc-client-api",
  "sc-consensus",
- "sc-consensus-aura",
- "sc-consensus-grandpa",
+ "sc-consensus-manual-seal",
  "sc-executor",
  "sc-keystore",
  "sc-rpc",
@@ -4399,7 +4404,6 @@ dependencies = [
  "sp-blockchain",
  "sp-consensus",
  "sp-consensus-aura",
- "sp-consensus-grandpa",
  "sp-core",
  "sp-inherents",
  "sp-io",
@@ -4422,9 +4426,8 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "frame-try-runtime",
- "pallet-aura",
+ "pallet-authorship",
  "pallet-balances",
- "pallet-grandpa",
  "pallet-nfts",
  "pallet-nfts-runtime-api",
  "pallet-sudo",
@@ -4435,7 +4438,6 @@ dependencies = [
  "scale-info",
  "sp-api",
  "sp-block-builder",
- "sp-consensus-aura",
  "sp-consensus-grandpa",
  "sp-core",
  "sp-inherents",
@@ -4637,22 +4639,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-aura"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "sp-application-crypto",
- "sp-consensus-aura",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-authorship"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
@@ -4678,29 +4664,6 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-grandpa"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "pallet-authorship",
- "pallet-session",
- "parity-scale-codec",
- "scale-info",
- "sp-application-crypto",
- "sp-consensus-grandpa",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-session",
- "sp-staking",
  "sp-std",
 ]
 
@@ -4731,27 +4694,6 @@ dependencies = [
  "pallet-nfts",
  "parity-scale-codec",
  "sp-api",
-]
-
-[[package]]
-name = "pallet-session"
-version = "4.0.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
-dependencies = [
- "frame-support",
- "frame-system",
- "impl-trait-for-tuples",
- "log",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-session",
- "sp-staking",
- "sp-std",
- "sp-trie",
 ]
 
 [[package]]
@@ -6195,41 +6137,84 @@ dependencies = [
 ]
 
 [[package]]
-name = "sc-consensus-grandpa"
+name = "sc-consensus-babe"
 version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
 dependencies = [
- "ahash 0.8.3",
- "array-bytes",
  "async-trait",
- "dyn-clone",
- "finality-grandpa",
  "fork-tree",
  "futures",
- "futures-timer",
  "log",
+ "num-bigint",
+ "num-rational",
+ "num-traits",
  "parity-scale-codec",
  "parking_lot 0.12.1",
- "rand 0.8.5",
- "sc-block-builder",
- "sc-chain-spec",
  "sc-client-api",
  "sc-consensus",
- "sc-network",
- "sc-network-common",
- "sc-network-gossip",
+ "sc-consensus-epochs",
+ "sc-consensus-slots",
+ "sc-keystore",
  "sc-telemetry",
- "sc-utils",
- "serde_json",
+ "scale-info",
  "sp-api",
  "sp-application-crypto",
- "sp-arithmetic",
+ "sp-block-builder",
  "sp-blockchain",
  "sp-consensus",
- "sp-consensus-grandpa",
+ "sp-consensus-babe",
+ "sp-consensus-slots",
  "sp-core",
+ "sp-inherents",
  "sp-keystore",
  "sp-runtime",
+ "substrate-prometheus-endpoint",
+ "thiserror",
+]
+
+[[package]]
+name = "sc-consensus-epochs"
+version = "0.10.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
+dependencies = [
+ "fork-tree",
+ "parity-scale-codec",
+ "sc-client-api",
+ "sc-consensus",
+ "sp-blockchain",
+ "sp-runtime",
+]
+
+[[package]]
+name = "sc-consensus-manual-seal"
+version = "0.10.0-dev"
+source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
+dependencies = [
+ "assert_matches",
+ "async-trait",
+ "futures",
+ "jsonrpsee",
+ "log",
+ "parity-scale-codec",
+ "sc-client-api",
+ "sc-consensus",
+ "sc-consensus-aura",
+ "sc-consensus-babe",
+ "sc-consensus-epochs",
+ "sc-transaction-pool",
+ "sc-transaction-pool-api",
+ "serde",
+ "sp-api",
+ "sp-blockchain",
+ "sp-consensus",
+ "sp-consensus-aura",
+ "sp-consensus-babe",
+ "sp-consensus-slots",
+ "sp-core",
+ "sp-inherents",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-timestamp",
  "substrate-prometheus-endpoint",
  "thiserror",
 ]
@@ -6447,25 +6432,6 @@ dependencies = [
  "substrate-prometheus-endpoint",
  "thiserror",
  "zeroize",
-]
-
-[[package]]
-name = "sc-network-gossip"
-version = "0.10.0-dev"
-source = "git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.42#3bb3882ce094ac211dea93fabfdcd4f902f5a7fd"
-dependencies = [
- "ahash 0.8.3",
- "futures",
- "futures-timer",
- "libp2p",
- "log",
- "lru",
- "sc-network",
- "sc-network-common",
- "sc-peerset",
- "sp-runtime",
- "substrate-prometheus-endpoint",
- "tracing",
 ]
 
 [[package]]
