@@ -5,22 +5,16 @@ The [Substrate](https://substrate.io/) NFTs node is a specialized blockchain for
 The purpose of this node is to provide developers with an easy way to experiment with the NFTs pallet in a sand-boxed environment.
 This node may be useful for anyone making guides, tutorials or workshops that cover use cases for the NFTs Pallet.
 
-Depending on your operating system and Rust version, there might be additional packages required to compile this template.
-Check the [Install](https://docs.substrate.io/install/) instructions for your platform for the most common dependencies.
-Alternatively, you can use one of the [alternative installation](#alternatives-installations) options.
+> Checkout the [`manual-seal`](https://github.com/sacha-l/substrate-nfts-node/tree/manual-seal) branch to run a version of this node that only creates a new block when the node receives a valid transaction. This makes testing faster and will cover most use cases except for setting minting deadlines.
 
 ## Launch the chain
 
-The easiest way to launch a node is to download the node from the releases page.
+The easiest way to launch a node is to download the node's binary from the releases page.
 Alternatively, you can build and launch the node locally.
 
-### Download the node binary
+### Download using release binaries
 
-Launch the chain by downloading the binary in the releases page of this repository (macOS and Linux) and executing it:
-
-```sh
-substrate-nfts-node 
-```
+Launch the chain by downloading the binary in the releases page of this repository (macOS and Linux) and running the executable. 
 
 ### Build the node locally
 
@@ -49,7 +43,7 @@ About Development mode:
 - Maintains state in a `tmp` folder while the node is running.
 - Uses the **Alice** and **Bob** accounts as default validator authorities.
 - Uses the **Alice** account as the default `sudo` account.
-- Has a preconfigured genesis state (`/node/src/chain_spec.rs`) that includes several prefunded development accounts.
+- Has a preconfigured genesis state (`/node/src/chain_spec.rs`) that includes several pre-funded development accounts.
 
 ### Embedded Docs
 
@@ -82,26 +76,4 @@ To get all the correct dependencies, activate direnv `direnv allow` and lorri `l
 
 ### Docker
 
-Please follow the [Substrate Docker instructions here](https://github.com/paritytech/substrate/blob/master/docker/README.md) to build the Docker container with the Substrate Node Template binary.
-
-## How to upgrade to new Polkadot release
-
-- [ ] Check Substrate's [`node-template`](https://github.com/paritytech/substrate/commits/master/bin/node-template)
-      for new commits between the new Polkadot release branch and the one this repository is currently synced with.
-      The current branch is mentioned in this readme.
-- [ ] Apply each commit that happened in this `node-template` folder since the last sync.
-- [ ] Check commits for [`pallet-nfts`](https://github.com/paritytech/substrate/tree/master/frame/nfts)
-      since the last time someone synchronized this repository with Substrate
-      in order to not miss any important changes.
-- [ ] Execute `diener update -s --branch my_polkadot_release_branch`.
-- [ ] Increment the minor version number in `node/Cargo.toml` and `runtime/Cargo.toml`.
-- [ ] Execute `cargo run --release`. If successful, it should produce blocks
-      and a new, up to date, `Cargo.lock` will be created.
-- [ ] Update this README with the hash of the Substrate `master` commit
-      with which you synchronized. The hash appears two times in this
-      README.
-- [ ] Create a PR with the changes, have it reviewed and merged.
-- [ ] Replace `XX` in this command with your incremented version number and execute it:
-      `git checkout main && git pull && git tag v0.XX.0 && git push origin v0.XX.0`.
-      This will push a new tag with the version number to this repository.
-      
+Please follow the [Substrate Docker instructions here](https://github.com/paritytech/substrate/blob/master/docker/README.md) to build the Docker container for this node.
