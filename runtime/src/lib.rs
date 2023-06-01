@@ -338,7 +338,7 @@ construct_runtime!(
 		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
-		Nft: pallet_nfts,
+		Nfts: pallet_nfts,
 	}
 );
 
